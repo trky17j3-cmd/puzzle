@@ -213,14 +213,8 @@ assistToggle.addEventListener("click", (e) => {
   e.stopPropagation();
   assistMenu.classList.toggle("hidden");
 });
-
-assistMenu.addEventListener("click", (e) => {
-  e.stopPropagation();
-});
-
-document.addEventListener("click", () => {
-  assistMenu.classList.add("hidden");
-});
+assistMenu.addEventListener("click", (e) => e.stopPropagation());
+document.addEventListener("click", () => assistMenu.classList.add("hidden"));
 
 /* パズル本体 */
 const board = document.getElementById("board");
@@ -237,48 +231,68 @@ let N = parseInt(sizeSelect.value, 10);
 let tiles = [];
 let currentImage = "preset1.jpg";
 
+let startTime = null;
+let timerInterval = null;
+let moves = 0;
+
 let imageWidth = 400;
 let imageHeight = 400;
 let boardWidth = 400;
 let boardHeight = 400;
 
-/* 画像読み込みして縦横比取得 */
+/* タイマー関数 */
+function startTimer() {
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const sec = Math.floor(elapsed / 1000);
+    const m = String(Math.floor(sec / 60)).padStart(2, "0");
+    const s = String(sec % 60).padStart(2, "0");
+    document.getElementById("timeDisplay").textContent = `${m}:${s}`;
+  }, 200);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  document.getElementById("timeDisplay").textContent = "00:00";
+  startTime = null;
+}
+
+function resetMoves() {
+  moves = 0;
+  document.getElementById("moveCount").textContent = moves;
+}
+
+/* 画像読み込み */
 function loadImageInfo(src) {
   const img = new Image();
 
-  // ★ onload の外に書く（兄弟）
-  img.onerror = () => {
-    console.log("画像読み込み失敗:", src);
-  };
+  img.onerror = () => console.log("画像読み込み失敗:", src);
 
   img.onload = () => {
     imageWidth = img.width;
     imageHeight = img.height;
-
-    console.log("imageWidth:", imageWidth, "imageHeight:", imageHeight);
-
     updateBoardSize();
     renderBoard();
-
-    console.log("boardWidth:", boardWidth, "boardHeight:", boardHeight);
   };
 
   img.src = src;
 }
 
-
-/* board のサイズを縦横比に合わせる */
-/* board のサイズを縦横比に合わせる */
+/* board のサイズ調整 */
 function updateBoardSize() {
-  const maxW = window.innerWidth * 0.8;   // 画面の80%まで使う
-  const maxH = window.innerHeight * 0.7;  // 画面の70%まで使う
+  const maxW = window.innerWidth * 0.8;
+  const maxH = window.innerHeight * 0.7;
 
-  const ratio = imageHeight / imageWidth; // ← これを追加！
+  const ratio = imageHeight / imageWidth;
 
   let w = maxW;
   let h = w * ratio;
 
-  // 高さが画面を超えるなら高さ基準に切り替え
   if (h > maxH) {
     h = maxH;
     w = h / ratio;
@@ -286,9 +300,7 @@ function updateBoardSize() {
 
   boardWidth = w;
   boardHeight = h;
-} // ← 閉じカッコを追加！
-
-
+}
 
 /* タイル初期化 */
 function initTiles() {
@@ -371,6 +383,9 @@ function onTileClick(e) {
 
   if (neighbors.includes(emptyIndex)) {
     [tiles[idx], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[idx]];
+    moves++;
+    document.getElementById("moveCount").textContent = moves;
+
     renderBoard();
     checkClear();
   }
@@ -393,6 +408,7 @@ function checkClear() {
     if (tiles[i] !== i) return;
   }
   if (tiles[N * N - 1] === null) {
+    stopTimer();
     alert("クリア！");
   }
 }
@@ -404,7 +420,12 @@ sizeSelect.addEventListener("change", () => {
   renderBoard();
 });
 
-shuffleBtn.addEventListener("click", shuffleTiles);
+shuffleBtn.addEventListener("click", () => {
+  resetTimer();
+  resetMoves();
+  startTimer();
+  shuffleTiles();
+});
 
 assistPreview.addEventListener("change", renderBoard);
 assistOverlay.addEventListener("change", renderBoard);
@@ -425,27 +446,24 @@ imageInput.addEventListener("change", e => {
   reader.readAsDataURL(file);
 });
 
-window.addEventListener("resize", renderBoard);
-
-/* 初期化 */
-previewImage.src = currentImage;
-initTiles();
-loadImageInfo(currentImage);  // ← これが最後
-
-
-
-// ▼ ここから追加（プリセット画像）
+/* プリセット画像 */
 document.getElementById("presetSelector").addEventListener("change", (e) => {
   const img = e.target.value;
   if (!img) return;
 
-  currentImage = img; // ← これを追加
+  currentImage = img;
   previewImage.src = img;
   loadImageInfo(img);
   initTiles();
   renderBoard();
 });
 
+window.addEventListener("resize", renderBoard);
+
+/* 初期化 */
+previewImage.src = currentImage;
+initTiles();
+loadImageInfo(currentImage);
 </script>
 
 
