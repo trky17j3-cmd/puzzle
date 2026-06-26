@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>画像スライドパズル（縦横比対応版）</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 5px;
+    font-family: sans-serif;
+  }
+
+  h1 {
+    margin-bottom: 10px;
+  }
+
+  #controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 10;
+  }
+
+  #board {
+    display: grid;
+    gap: 3px;
+    margin: 20px auto;
+  }
+
+  .tile {
+    cursor: pointer;
+    position: relative;
+    background-repeat: no-repeat;
+  }
+
+  .empty {
+    background: #fff;
+    cursor: default;
+  }
+
+  .correct {
+    outline: 3px solid rgba(0, 255, 0, 0.7);
+  }
+
+  button, select, label, input[type="file"] {
+    padding: 6px 10px;
+    font-size: 14px;
+    margin: 2px;
+  }
+
+  .tile-number {
+    position: absolute;
+    top: 3px;
+    left: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    pointer-events: none;
+  }
+
+  #mainArea {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  #previewContainer {
+    text-align: center;
+    font-size: 14px;
+  }
+
+  #previewImage {
+    max-width: 200px;
+    height: auto;
+    border: 1px solid #ccc;
+  }
+
+  @media (max-width: 600px) {
+    #mainArea {
+      flex-direction: column;
+      align-items: center;
+    }
+    #previewImage {
+      max-width: 60vw;
+    }
+  }
+
+  /* プルダウン */
+  #assistDropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  #assistToggle {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  #assistMenu {
+    position: absolute;
+    top: 32px;
+    left: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    border-radius: 4px;
+    z-index: 9999;
+    width: 180px;
+  }
+
+  #assistMenu.hidden {
+    display: none;
+  }
+
+  #assistMenu label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>画像スライドパズル（縦横比対応版）</h1>
+
+<div id="controls">
+  <div>
+    <label>分割数：
+      <select id="sizeSelect">
+        <option value="3">3 × 3</option>
+        <option value="4" selected>4 × 4</option>
+        <option value="5">5 × 5</option>
+      </select>
+    </label>
+  </div>
+
+  <div>
+    <button id="shuffle">シャッフル</button>
+  </div>
+
+  <div>
+    <label>画像選択：
+      <input type="file" id="imageInput" accept="image/*">
+    </label>
+  </div>
+
+  <div id="assistDropdown">
+    <button id="assistToggle">アシスト設定 ▼</button>
+    <div id="assistMenu" class="hidden">
+      <label><input type="checkbox" id="assistPreview" checked> プレビュー表示</label>
+      <label><input type="checkbox" id="assistOverlay" checked> 数字オーバーレイ</label>
+      <label><input type="checkbox" id="assistHighlight"> 正しい位置ハイライト</label>
+    </div>
+  </div>
+</div>
+
+<div id="mainArea">
+  <div id="board"></div>
+
+  <div id="previewContainer">
+    <p>完成画像プレビュー</p>
+    <img id="previewImage" src="puzzle.jpg" alt="プレビュー">
+  </div>
+</div>
+
+<script>
+/* プルダウン */
+const assistDropdown = document.getElementById("assistDropdown");
+const assistToggle = document.getElementById("assistToggle");
+const assistMenu = document.getElementById("assistMenu");
+
+assistToggle.addEventListener("click", (e) => {
+  e.stopPropagation();
+  assistMenu.classList.toggle("hidden");
+});
+
+assistMenu.addEventListener("click", (e) => {
+  e.stopPropagation();
+});
+
+document.addEventListener("click", () => {
+  assistMenu.classList.add("hidden");
+});
+
+/* パズル本体 */
+const board = document.getElementById("board");
+const shuffleBtn = document.getElementById("shuffle");
+const sizeSelect = document.getElementById("sizeSelect");
+const imageInput = document.getElementById("imageInput");
+const previewImage = document.getElementById("previewImage");
+
+const assistPreview = document.getElementById("assistPreview");
+const assistOverlay = document.getElementById("assistOverlay");
+const assistHighlight = document.getElementById("assistHighlight");
+
+let N = parseInt(sizeSelect.value, 10);
+let tiles = [];
+let currentImage = "puzzle.jpg";
+
+let imageWidth = 400;
+let imageHeight = 400;
+let boardWidth = 400;
+let boardHeight = 400;
+
+/* 画像読み込みして縦横比取得 */
+function loadImageInfo(src) {
+  const img = new Image();
+
+  // ★ onload の外に書く（兄弟）
+  img.onerror = () => {
+    console.log("画像読み込み失敗:", src);
+  };
+
+  img.onload = () => {
+    imageWidth = img.width;
+    imageHeight = img.height;
+
+    console.log("imageWidth:", imageWidth, "imageHeight:", imageHeight);
+
+    updateBoardSize();
+    renderBoard();
+
+    console.log("boardWidth:", boardWidth, "boardHeight:", boardHeight);
+  };
+
+  img.src = src;
+}
+
+
+/* board のサイズを縦横比に合わせる */
+/* board のサイズを縦横比に合わせる */
+function updateBoardSize() {
+  const maxW = window.innerWidth * 0.8;   // 画面の80%まで使う
+  const maxH = window.innerHeight * 0.7;  // 画面の70%まで使う
+
+  const ratio = imageHeight / imageWidth; // ← これを追加！
+
+  let w = maxW;
+  let h = w * ratio;
+
+  // 高さが画面を超えるなら高さ基準に切り替え
+  if (h > maxH) {
+    h = maxH;
+    w = h / ratio;
+  }
+
+  boardWidth = w;
+  boardHeight = h;
+} // ← 閉じカッコを追加！
+
+
+
+/* タイル初期化 */
+function initTiles() {
+  tiles = [];
+  for (let i = 0; i < N * N - 1; i++) tiles.push(i);
+  tiles.push(null);
+}
+
+/* 描画 */
+function renderBoard() {
+  updateBoardSize();
+
+  const tileW = boardWidth / N;
+  const tileH = boardHeight / N;
+
+  board.style.width = boardWidth + "px";
+  board.style.height = boardHeight + "px";
+  board.style.gridTemplateColumns = `repeat(${N}, ${tileW}px)`;
+  board.style.gridTemplateRows = `repeat(${N}, ${tileH}px)`;
+
+  board.innerHTML = "";
+
+  tiles.forEach((value, index) => {
+    const div = document.createElement("div");
+    div.dataset.index = index;
+    div.style.width = tileW + "px";
+    div.style.height = tileH + "px";
+
+    if (value === null) {
+      div.className = "tile empty";
+    } else {
+      div.className = "tile";
+
+      const x = (value % N) * -tileW;
+      const y = Math.floor(value / N) * -tileH;
+
+      div.style.backgroundImage = `url(${currentImage})`;
+      div.style.backgroundSize = `${boardWidth}px ${boardHeight}px`;
+      div.style.backgroundPosition = `${x}px ${y}px`;
+
+      if (assistOverlay.checked) {
+        const num = document.createElement("div");
+        num.className = "tile-number";
+        num.textContent = value + 1;
+        div.appendChild(num);
+      }
+
+      if (assistHighlight.checked && value === index) {
+        div.classList.add("correct");
+      }
+
+      div.addEventListener("click", onTileClick);
+    }
+
+    board.appendChild(div);
+  });
+
+  previewImage.style.display = assistPreview.checked ? "block" : "none";
+}
+
+/* 隣接判定 */
+function getNeighbors(index) {
+  const neighbors = [];
+  const row = Math.floor(index / N);
+  const col = index % N;
+
+  if (row > 0) neighbors.push(index - N);
+  if (row < N - 1) neighbors.push(index + N);
+  if (col > 0) neighbors.push(index - 1);
+  if (col < N - 1) neighbors.push(index + 1);
+
+  return neighbors;
+}
+
+/* タイルクリック */
+function onTileClick(e) {
+  const idx = parseInt(e.currentTarget.dataset.index, 10);
+  const emptyIndex = tiles.indexOf(null);
+  const neighbors = getNeighbors(idx);
+
+  if (neighbors.includes(emptyIndex)) {
+    [tiles[idx], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[idx]];
+    renderBoard();
+    checkClear();
+  }
+}
+
+/* シャッフル */
+function shuffleTiles() {
+  for (let i = 0; i < 300; i++) {
+    const emptyIndex = tiles.indexOf(null);
+    const neighbors = getNeighbors(emptyIndex);
+    const moveIndex = neighbors[Math.floor(Math.random() * neighbors.length)];
+    [tiles[emptyIndex], tiles[moveIndex]] = [tiles[moveIndex], tiles[emptyIndex]];
+  }
+  renderBoard();
+}
+
+/* クリア判定 */
+function checkClear() {
+  for (let i = 0; i < N * N - 1; i++) {
+    if (tiles[i] !== i) return;
+  }
+  if (tiles[N * N - 1] === null) {
+    alert("クリア！");
+  }
+}
+
+/* イベント */
+sizeSelect.addEventListener("change", () => {
+  N = parseInt(sizeSelect.value, 10);
+  initTiles();
+  renderBoard();
+});
+
+shuffleBtn.addEventListener("click", shuffleTiles);
+
+assistPreview.addEventListener("change", renderBoard);
+assistOverlay.addEventListener("change", renderBoard);
+assistHighlight.addEventListener("change", renderBoard);
+
+imageInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    currentImage = reader.result;
+    previewImage.src = currentImage;
+    loadImageInfo(currentImage);
+    initTiles();
+    renderBoard();
+  };
+  reader.readAsDataURL(file);
+});
+
+window.addEventListener("resize", renderBoard);
+
+/* 初期化 */
+previewImage.src = currentImage;
+initTiles();
+loadImageInfo(currentImage);  // ← これが最後
+</script>
+
+</body>
+</html>
