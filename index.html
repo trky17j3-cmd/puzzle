@@ -439,11 +439,13 @@ document.getElementById("presetSelector").addEventListener("change", (e) => {
   const img = e.target.value;
   if (!img) return;
 
+  currentImage = img; // ← これを追加
   previewImage.src = img;
   loadImageInfo(img);
   initTiles();
   renderBoard();
 });
+
 </script>
 
 
