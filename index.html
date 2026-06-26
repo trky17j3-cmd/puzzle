@@ -134,6 +134,16 @@
 
 <div id="controls">
 
+  <!-- ▼ タイム・手数（ここに1回だけ置く） -->
+  <div>
+    経過時間：<span id="timeDisplay">00:00</span>
+  </div>
+
+  <div>
+    手数：<span id="moveCount">0</span>
+  </div>
+
+  <!-- ▼ 分割数 -->
   <div>
     <label>分割数：
       <select id="sizeSelect">
@@ -144,12 +154,12 @@
     </label>
   </div>
 
+  <!-- ▼ シャッフル -->
   <div>
     <button id="shuffle">シャッフル</button>
   </div>
 
-  <!-- ▼ ここが元の画像選択UI（削除済み） -->
-
+  <!-- ▼ アシスト設定 -->
   <div id="assistDropdown">
     <button id="assistToggle">アシスト設定 ▼</button>
     <div id="assistMenu" class="hidden">
@@ -159,7 +169,7 @@
     </div>
   </div>
 
-  <!-- ▼ 新しい横並びUI（自由選択＋プリセット） -->
+  <!-- ▼ 自分の画像 + プリセット -->
   <div style="display:flex; gap:10px; align-items:center;">
     <label>
       自分の画像を選ぶ：
@@ -184,13 +194,12 @@
         <option value="preset12.jpg">プリセット12</option>
         <option value="preset13.jpg">プリセット13</option>
         <option value="preset14.jpg">プリセット14</option>
-
-
       </select>
     </label>
   </div>
 
-</div> <!-- controls 終わり -->
+</div>
+
 
 <div id="mainArea">
   <div id="board"></div>
@@ -465,6 +474,7 @@ previewImage.src = currentImage;
 initTiles();
 loadImageInfo(currentImage);
 </script>
+
 
 
 </body>
