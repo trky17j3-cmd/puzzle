@@ -444,6 +444,10 @@ imageInput.addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
 
+resetTimer();
+resetMoves();
+
+
   const reader = new FileReader();
   reader.onload = () => {
     currentImage = reader.result;
@@ -459,6 +463,10 @@ imageInput.addEventListener("change", e => {
 document.getElementById("presetSelector").addEventListener("change", (e) => {
   const img = e.target.value;
   if (!img) return;
+
+resetTimer();
+resetMoves();
+
 
   currentImage = img;
   previewImage.src = img;
