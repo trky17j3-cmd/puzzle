@@ -93,7 +93,7 @@
     }
   }
 
-  /* プルダウン */
+  /* アシスト設定プルダウン */
   #assistDropdown {
     position: relative;
     display: inline-block;
@@ -127,11 +127,13 @@
   }
 </style>
 </head>
+
 <body>
 
 <h1>画像スライドパズル（縦横比対応版）</h1>
 
 <div id="controls">
+
   <div>
     <label>分割数：
       <select id="sizeSelect">
@@ -146,11 +148,7 @@
     <button id="shuffle">シャッフル</button>
   </div>
 
-  <div>
-    <label>画像選択：
-      <input type="file" id="imageInput" accept="image/*">
-    </label>
-  </div>
+  <!-- ▼ ここが元の画像選択UI（削除済み） -->
 
   <div id="assistDropdown">
     <button id="assistToggle">アシスト設定 ▼</button>
@@ -160,7 +158,38 @@
       <label><input type="checkbox" id="assistHighlight"> 正しい位置ハイライト</label>
     </div>
   </div>
-</div>
+
+  <!-- ▼ 新しい横並びUI（自由選択＋プリセット） -->
+  <div style="display:flex; gap:10px; align-items:center;">
+    <label>
+      自分の画像を選ぶ：
+      <input type="file" id="imageInput" accept="image/*">
+    </label>
+
+    <label>
+      プリセット画像：
+      <select id="presetSelector">
+        <option value="">選択してください</option>
+        <option value="preset1.jpg">プリセット1</option>
+        <option value="preset2.jpg">プリセット2</option>
+        <option value="preset3.jpg">プリセット3</option>
+        <option value="preset4.jpg">プリセット1</option>
+        <option value="preset5.jpg">プリセット2</option>
+        <option value="preset6.jpg">プリセット3</option>
+        <option value="preset7.jpg">プリセット1</option>
+        <option value="preset8.jpg">プリセット2</option>
+        <option value="preset9.jpg">プリセット3</option>
+        <option value="preset10.jpg">プリセット1</option>
+        <option value="preset11.jpg">プリセット2</option>
+        <option value="preset12.jpg">プリセット3</option>
+        <option value="preset13.jpg">プリセット1</option>
+        <option value="preset14.jpg">プリセット2</option>
+
+      </select>
+    </label>
+  </div>
+
+</div> <!-- controls 終わり -->
 
 <div id="mainArea">
   <div id="board"></div>
@@ -170,6 +199,8 @@
     <img id="previewImage" src="puzzle.jpg" alt="プレビュー">
   </div>
 </div>
+
+
 
 <script>
 /* プルダウン */
@@ -399,7 +430,21 @@ window.addEventListener("resize", renderBoard);
 previewImage.src = currentImage;
 initTiles();
 loadImageInfo(currentImage);  // ← これが最後
+
+
+
+// ▼ ここから追加（プリセット画像）
+document.getElementById("presetSelector").addEventListener("change", (e) => {
+  const img = e.target.value;
+  if (!img) return;
+
+  previewImage.src = img;
+  loadImageInfo(img);
+  initTiles();
+  renderBoard();
+});
 </script>
+
 
 </body>
 </html>
