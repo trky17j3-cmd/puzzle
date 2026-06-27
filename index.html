@@ -394,6 +394,9 @@ function renderBoard() {
   });
 
   previewImage.style.display = assistPreview.checked ? "block" : "none";
+  // ★★★ これを追加 ★★★
+  displayBestRecord(`${N}x${N}`, currentImage);
+  
 }
 
 /* 隣接判定 */
