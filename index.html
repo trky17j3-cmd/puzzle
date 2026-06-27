@@ -212,13 +212,22 @@ assistToggle.addEventListener("click", (e) => {
 assistMenu.addEventListener("click", (e) => e.stopPropagation());
 document.addEventListener("click", () => assistMenu.classList.add("hidden"));
 
-/* プリセット画像100枠を自動生成 */
+/* プリセット画像100枠を自動生成（存在チェック付き） */
 const presetSelector = document.getElementById("presetSelector");
+
 for (let i = 1; i <= 100; i++) {
-  const opt = document.createElement("option");
-  opt.value = `preset${i}.jpg`;
-  opt.textContent = `プリセット ${i}`;
-  presetSelector.appendChild(opt);
+  const filename = `preset${i}.jpg`;
+  const img = new Image();
+  img.src = filename;
+
+  img.onload = () => {
+    const opt = document.createElement("option");
+    opt.value = filename;
+    opt.textContent = `プリセット ${i}`;
+    presetSelector.appendChild(opt);
+  };
+
+  // 画像が存在しない場合（onerror）は何もしない → 非表示
 }
 
 /* パズル本体 */
@@ -520,6 +529,11 @@ function displayBestRecord(mode, imageName) {
   const record = loadBestRecord(mode, imageName);
   const area = document.getElementById("bestRecordArea");
 
+  if (!area) {
+    console.warn("bestRecordArea が見つかりません");
+    return;
+  }
+
   if (!record) {
     area.textContent = "記録なし / No record yet";
     return;
@@ -571,6 +585,7 @@ initTiles();
 loadImageInfo(currentImage);
 displayBestRecord(`${N}x${N}`, currentImage);
 </script>
+
 
 </body>
 </html>
