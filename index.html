@@ -198,8 +198,7 @@
 </div>
 
 <!-- ★ ここを追加する！ -->
-<div id="bestRecordArea" style="margin-top: 15px; font-size: 14px; display: block;"></div>
-
+<div id="bestRecordArea" style="margin-top: 15px; font-size: 14px; display: block; background: #f9f9f9; border: 1px solid #ccc; padding: 5px;"></div>
 
 
 
@@ -551,6 +550,8 @@ function displayBestRecord(mode, imageName) {
   const record = loadBestRecord(mode, imageName);
   const area = document.getElementById("bestRecordArea");
 
+  console.log("displayBestRecord called:", mode, imageName, record);
+
   if (!area) {
     console.warn("bestRecordArea が見つかりません");
     return;
@@ -570,6 +571,7 @@ function displayBestRecord(mode, imageName) {
     <div>ニックネーム / Nickname：${record.nickname}</div>
   `;
 }
+
 
 /* 日本語対応ニックネーム */
 function normalizeNickname(name) {
@@ -606,8 +608,12 @@ window.addEventListener("DOMContentLoaded", () => {
   previewImage.src = currentImage;
   initTiles();
   loadImageInfo(currentImage);
-  displayBestRecord(`${N}x${N}`, currentImage);
+  renderBoard();
+  setTimeout(() => {
+    displayBestRecord(`${N}x${N}`, currentImage);
+  }, 500);
 });
+
 
 </script>
 
