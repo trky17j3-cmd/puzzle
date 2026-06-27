@@ -245,6 +245,15 @@ assistToggle.addEventListener("click", (e) => {
 assistMenu.addEventListener("click", (e) => e.stopPropagation());
 document.addEventListener("click", () => assistMenu.classList.add("hidden"));
 
+/* プリセット画像100枠を自動生成 */
+const presetSelector = document.getElementById("presetSelector");
+for (let i = 1; i <= 100; i++) {
+  const opt = document.createElement("option");
+  opt.value = `preset${i}.jpg`;
+  opt.textContent = `プリセット ${i}`;
+  presetSelector.appendChild(opt);
+}
+
 /* パズル本体 */
 const board = document.getElementById("board");
 const shuffleBtn = document.getElementById("shuffle");
@@ -436,9 +445,14 @@ function checkClear() {
   for (let i = 0; i < N * N - 1; i++) {
     if (tiles[i] !== i) return;
   }
+
   if (tiles[N * N - 1] === null) {
     stopTimer();
-    alert("クリア！");
+
+    const elapsed = (Date.now() - startTime) / 1000;
+    const modeName = `${N}x${N}`;
+
+    onPuzzleClear(modeName, elapsed, moves, currentImage);
   }
 }
 
@@ -447,6 +461,7 @@ sizeSelect.addEventListener("change", () => {
   N = parseInt(sizeSelect.value, 10);
   initTiles();
   renderBoard();
+  displayBestRecord(`${N}x${N}`, currentImage);
 });
 
 shuffleBtn.addEventListener("click", () => {
@@ -464,9 +479,8 @@ imageInput.addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
 
-resetTimer();
-resetMoves();
-
+  resetTimer();
+  resetMoves();
 
   const reader = new FileReader();
   reader.onload = () => {
@@ -475,35 +489,121 @@ resetMoves();
     loadImageInfo(currentImage);
     initTiles();
     renderBoard();
+    displayBestRecord(`${N}x${N}`, currentImage); // 自由画像は常に記録なし
   };
   reader.readAsDataURL(file);
 });
 
 /* プリセット画像 */
-document.getElementById("presetSelector").addEventListener("change", (e) => {
+presetSelector.addEventListener("change", (e) => {
   const img = e.target.value;
   if (!img) return;
 
-resetTimer();
-resetMoves();
-
+  resetTimer();
+  resetMoves();
 
   currentImage = img;
   previewImage.src = img;
   loadImageInfo(img);
   initTiles();
   renderBoard();
+  displayBestRecord(`${N}x${N}`, currentImage);
 });
 
 window.addEventListener("resize", renderBoard);
+
+/* ★ 記録キー生成（自由画像は記録なし） */
+function getRecordKey(mode, imageName) {
+  if (imageName && imageName.startsWith("preset")) {
+    return `bestRecord_${mode}_${imageName}`;
+  }
+  return null; // 自由画像は記録なし
+}
+
+/* 記録保存 */
+function saveBestRecord(mode, time, moves, nickname, imageName) {
+  const key = getRecordKey(mode, imageName);
+  if (!key) return false; // 自由画像は保存しない
+
+  const existing = JSON.parse(localStorage.getItem(key));
+
+  if (!existing || time < existing.time) {
+    const record = {
+      mode,
+      time,
+      moves,
+      nickname: nickname || "Player1",
+      image: imageName
+    };
+    localStorage.setItem(key, JSON.stringify(record));
+    return true;
+  }
+  return false;
+}
+
+/* 記録読み込み */
+function loadBestRecord(mode, imageName) {
+  const key = getRecordKey(mode, imageName);
+  if (!key) return null; // 自由画像は常に記録なし
+  return JSON.parse(localStorage.getItem(key));
+}
+
+/* 記録表示 */
+function displayBestRecord(mode, imageName) {
+  const record = loadBestRecord(mode, imageName);
+  const area = document.getElementById("bestRecordArea");
+
+  if (!record) {
+    area.textContent = "記録なし / No record yet";
+    return;
+  }
+
+  area.innerHTML = `
+    <div>【最高記録 / Best Record】</div>
+    <div>画像 / Image：${record.image}</div>
+    <div>モード / Mode：${record.mode}</div>
+    <div>時間 / Time：${record.time.toFixed(2)} 秒</div>
+    <div>手数 / Moves：${record.moves}</div>
+    <div>ニックネーム / Nickname：${record.nickname}</div>
+  `;
+}
+
+/* 日本語対応ニックネーム */
+function normalizeNickname(name) {
+  if (!name) return "";
+  return name.replace(/　/g, " ").trim();
+}
+
+/* クリア処理 */
+function onPuzzleClear(mode, time, moves, imageName) {
+  const existing = loadBestRecord(mode, imageName);
+  const isNew = (!existing || time < existing.time);
+
+  if (isNew && imageName.startsWith("preset")) {
+    alert("🎉 新記録です！\nNew Record!\n\nニックネームを入力してください。");
+
+    let nickname = prompt("ニックネーム / Nickname：");
+    nickname = normalizeNickname(nickname);
+
+    if (!nickname) {
+      nickname = "Player1";
+      alert("ニックネームが入力されなかったため、Player1 として登録しました。");
+    }
+
+    saveBestRecord(mode, time, moves, nickname, imageName);
+  } else {
+    alert("クリアおめでとうございます！\nPuzzle Completed!");
+  }
+
+  displayBestRecord(mode, imageName);
+}
 
 /* 初期化 */
 previewImage.src = currentImage;
 initTiles();
 loadImageInfo(currentImage);
+displayBestRecord(`${N}x${N}`, currentImage);
 </script>
-
-
 
 </body>
 </html>
