@@ -216,8 +216,10 @@ assistToggle.addEventListener("click", (e) => {
 assistMenu.addEventListener("click", (e) => e.stopPropagation());
 document.addEventListener("click", () => assistMenu.classList.add("hidden"));
 
-/* プリセット画像100枠を自動生成（存在チェック付き） */
+/* プリセット画像100枠を自動生成（存在チェック＋昇順ソート） */
 const presetSelector = document.getElementById("presetSelector");
+let presetList = [];
+let checkedCount = 0;
 
 for (let i = 1; i <= 100; i++) {
   const filename = `preset${i}.jpg`;
@@ -225,14 +227,30 @@ for (let i = 1; i <= 100; i++) {
   img.src = filename;
 
   img.onload = () => {
-    const opt = document.createElement("option");
-    opt.value = filename;
-    opt.textContent = `プリセット ${i}`;
-    presetSelector.appendChild(opt);
+    presetList.push({ index: i, file: filename });
+    checkedCount++;
+    if (checkedCount === 100) finalizePresetList();
   };
 
-  // 画像が存在しない場合（onerror）は何もしない → 非表示
+  img.onerror = () => {
+    checkedCount++;
+    if (checkedCount === 100) finalizePresetList();
+  };
 }
+
+function finalizePresetList() {
+  // 昇順にソート
+  presetList.sort((a, b) => a.index - b.index);
+
+  // option を追加
+  presetList.forEach(item => {
+    const opt = document.createElement("option");
+    opt.value = item.file;
+    opt.textContent = `プリセット ${item.index}`;
+    presetSelector.appendChild(opt);
+  });
+}
+
 
 /* パズル本体 */
 const board = document.getElementById("board");
