@@ -198,7 +198,7 @@
 </div>
 
 <!-- ★ ここを追加する！ -->
-<div id="bestRecordArea" style="margin-top: 15px; font-size: 14px;"></div>
+<div id="bestRecordArea" style="margin-top: 15px; font-size: 14px; display: block;"></div>
 
 
 
@@ -602,10 +602,13 @@ function onPuzzleClear(mode, time, moves, imageName) {
 }
 
 /* 初期化 */
-previewImage.src = currentImage;
-initTiles();
-loadImageInfo(currentImage);
-displayBestRecord(`${N}x${N}`, currentImage);
+window.addEventListener("DOMContentLoaded", () => {
+  previewImage.src = currentImage;
+  initTiles();
+  loadImageInfo(currentImage);
+  displayBestRecord(`${N}x${N}`, currentImage);
+});
+
 </script>
 
 
