@@ -1,2 +1,2 @@
-Picture Sliding Puzzle
+Picture Sliding Puzzle<br>
 Let's enjoy!
