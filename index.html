@@ -630,7 +630,7 @@ function onPuzzleClear(mode, time, moves, imageName) {
 }
 
 // ★アクセスカウンタ（CountAPI）
-fetch("https://api.countapi.xyz/hit/trky17j3-cmd.github.io/puzzle/visits")
+fetch("https://api.countapi.xyz/hit/trky17j3-cmd.github.io-puzzle/visits")
   .then(res => res.json())
   .then(data => {
     document.getElementById("counter").innerText = data.value;
