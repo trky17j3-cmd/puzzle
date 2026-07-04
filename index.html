@@ -534,22 +534,20 @@ function onPuzzleClear(mode, time, moves, imageName) {
   displayBestRecord(mode, imageName);
 }
 
-/* ▼ 初期化 */
-window.addEventListener("DOMContentLoaded", () => {
-  previewImage.src = currentImage;
-  initTiles();
-  loadImageInfo(currentImage);
-  renderBoard();
+function loadImageInfo(src) {
+  const img = new Image();
+  img.onload = () => {
+    imageWidth = img.width;
+    imageHeight = img.height;
+    updateBoardSize();
+    renderBoard();
 
-img.onload = () => {
-  imageWidth = img.width;
-  imageHeight = img.height;
-  updateBoardSize();
-  renderBoard();
+    // ★ ここに移動する
+    displayBestRecord(`${N}x${N}`, currentImage);
+  };
+  img.src = src;
+}
 
-  // ★ ここに移動する
-  displayBestRecord(`${N}x${N}`, currentImage);
-};
 
 });
 
