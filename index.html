@@ -482,32 +482,24 @@ function displayBestRecord(mode, imageName) {
     .limit(10)
     .get()
     .then(snapshot => {
-      if (snapshot.empty) {
-        area.textContent = "記録なし / No record yet";
-        return;
-      }
-
-      // innerHTML を使わず安全に描画
-      const fragment = document.createDocumentFragment();
+      area.innerHTML = ""; // 一度クリア
       const title = document.createElement("div");
       title.textContent = "【ランキング / Ranking】";
-      fragment.appendChild(title);
+      area.appendChild(title);
 
       snapshot.forEach(doc => {
         const r = doc.data();
         const item = document.createElement("div");
         item.textContent = `${r.nickname} / ${r.record}s / ${r.image} / ${r.moves}手`;
-        fragment.appendChild(item);
+        area.appendChild(item);
       });
-
-      area.innerHTML = ""; // 一度クリア
-      area.appendChild(fragment);
     })
     .catch(err => {
       console.error("Firestore 読み込みエラー:", err);
       area.textContent = "読み込み失敗";
     });
 }
+
 
 
 /* ▼ ニックネーム整形 */
