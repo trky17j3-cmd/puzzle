@@ -541,9 +541,16 @@ window.addEventListener("DOMContentLoaded", () => {
   loadImageInfo(currentImage);
   renderBoard();
 
-  setTimeout(() => {
-    displayBestRecord(`${N}x${N}`, currentImage);
-  }, 500);
+img.onload = () => {
+  imageWidth = img.width;
+  imageHeight = img.height;
+  updateBoardSize();
+  renderBoard();
+
+  // ★ ここに移動する
+  displayBestRecord(`${N}x${N}`, currentImage);
+};
+
 });
 
 
