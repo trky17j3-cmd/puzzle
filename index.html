@@ -26,11 +26,11 @@
     position: relative;
     z-index: 10;
   }
-  #board {
-    display: grid;
-    gap: 1px;
-    margin: 20px auto;
-  }
+#board {
+  position: relative;
+  z-index: 1;
+}
+
   .tile {
     cursor: pointer;
     position: relative;
@@ -173,7 +173,13 @@ const assistMenu = document.getElementById("assistMenu");
 assistToggle.addEventListener("click", (e) => {
   e.stopPropagation();
   assistMenu.classList.toggle("hidden");
+  if (!assistMenu.classList.contains("hidden")) {
+    assistMenu.style.zIndex = 9999;
+  } else {
+    assistMenu.style.zIndex = "auto";
+  }
 });
+
 assistMenu.addEventListener("click", (e) => e.stopPropagation());
 document.addEventListener("click", () => assistMenu.classList.add("hidden"));
 
