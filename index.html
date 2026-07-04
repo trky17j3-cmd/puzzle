@@ -534,6 +534,14 @@ function onPuzzleClear(mode, time, moves, imageName) {
   displayBestRecord(mode, imageName);
 }
 
+/* ▼ 初期化 */
+window.addEventListener("DOMContentLoaded", () => {
+  previewImage.src = currentImage;
+  initTiles();
+  loadImageInfo(currentImage);
+});
+
+/* ▼ 画像読み込み */
 function loadImageInfo(src) {
   const img = new Image();
   img.onload = () => {
@@ -542,17 +550,12 @@ function loadImageInfo(src) {
     updateBoardSize();
     renderBoard();
 
-    // ★ ここに移動する
     displayBestRecord(`${N}x${N}`, currentImage);
   };
   img.src = src;
 }
-
-
-});
-
-
 </script>
 
 </body>
 </html>
+
