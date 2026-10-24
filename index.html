@@ -520,10 +520,14 @@ sizeSelect.addEventListener("change", () => {
 
   showPreviewBoard = true;
 
+  resetTimer();
+  resetMoves();
+
   initTiles();
   renderBoard();
   displayBestRecord(`${N}x${N}`, currentImage);
 });
+  
 shuffleBtn.addEventListener("click", () => {
 
   showPreviewBoard = false;
