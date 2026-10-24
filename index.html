@@ -36,7 +36,7 @@
     cursor: pointer;
     position: relative;
     background-repeat: no-repeat;
-    border: 1px solid rgba(255,255,255,0.4); /* ← これを追加 */
+    border: 1px solid rgba(255,255,255,0.2); /* ← これを追加 */
 }
 
   .empty {
@@ -165,7 +165,7 @@
     <button id="assistToggle">アシスト設定 ▼</button>
     <div id="assistMenu" class="hidden">
       <label><input type="checkbox" id="assistPreview" checked> プレビュー表示</label>
-      <label><input type="checkbox" id="assistOverlay" checked> 数字オーバーレイ</label>
+      <label><input type="checkbox" id="assistOverlay"> 数字オーバーレイ</label>
       <label><input type="checkbox" id="assistHighlight"> 正しい位置ハイライト</label>
     </div>
   </div>
@@ -194,16 +194,6 @@
   <div id="previewContainer">
     <p>完成画像プレビュー</p>
     <img id="previewImage" src="puzzle.jpg" alt="プレビュー">
-  </div>
-
-  <!-- ★最終配置 -->
-  <div id="bestRecordArea"
-       style="margin-top:15px;
-              font-size:14px;
-              background:#f9f9f9;
-              border:1px solid #ccc;
-              padding:6px;
-              position:relative;">
   </div>
 </div>
 
@@ -284,6 +274,8 @@ const assistHighlight = document.getElementById("assistHighlight");
 let N = parseInt(sizeSelect.value, 10);
 let tiles = [];
 let currentImage = "preset1.jpg";
+
+let showPreviewBoard = true;
 
 let startTime = null;
 let timerInterval = null;
@@ -383,9 +375,40 @@ function renderBoard() {
     div.style.width = tileW + "px";
     div.style.height = tileH + "px";
 
-    if (value === null) {
-      div.className = "tile empty";
-    } else {
+if (value === null) {
+
+  if (showPreviewBoard) {
+
+    div.className = "tile";
+
+    const fakeValue = N * N - 1;
+
+    const x =
+      (fakeValue % N) * -tileW;
+
+    const y =
+      Math.floor(fakeValue / N)
+      * -tileH;
+
+    div.style.backgroundImage =
+      `url(${currentImage})`;
+
+    div.style.backgroundSize =
+      `${boardWidth}px ${boardHeight}px`;
+
+    div.style.backgroundPosition =
+      `${x}px ${y}px`;
+
+    div.style.opacity = "0.5";
+
+  } else {
+
+    div.className = "tile empty";
+
+  }
+
+} else {
+
       div.className = "tile";
 
       const x = (value % N) * -tileW;
@@ -395,16 +418,24 @@ function renderBoard() {
       div.style.backgroundSize = `${boardWidth}px ${boardHeight}px`;
       div.style.backgroundPosition = `${x}px ${y}px`;
 
-      if (assistOverlay.checked) {
-        const num = document.createElement("div");
-        num.className = "tile-number";
-        num.textContent = value + 1;
-        div.appendChild(num);
-      }
+if (
+    assistOverlay.checked &&
+    !showPreviewBoard
+) {
+    const num = document.createElement("div");
+    num.className = "tile-number";
+    num.textContent = value + 1;
+    div.appendChild(num);
+}
 
-      if (assistHighlight.checked && value === index) {
-        div.classList.add("correct");
-      }
+
+if (
+    assistHighlight.checked &&
+    !showPreviewBoard &&
+    value === index
+) {
+    div.classList.add("correct");
+}
 
       div.addEventListener("click", onTileClick);
     }
@@ -465,13 +496,25 @@ function checkClear() {
     if (tiles[i] !== i) return;
   }
 
-  if (tiles[N * N - 1] === null) {
+if (tiles[N * N - 1] === null) {
+
+    showPreviewBoard = true;
+
     stopTimer();
 
-    const elapsed = (Date.now() - startTime) / 1000;
+    const elapsed =
+      (Date.now() - startTime) / 1000;
+
     const modeName = `${N}x${N}`;
 
-    onPuzzleClear(modeName, elapsed, moves, currentImage);
+    renderBoard();
+
+    onPuzzleClear(
+      modeName,
+      elapsed,
+      moves,
+      currentImage
+    );
   }
 }
 
@@ -484,6 +527,9 @@ sizeSelect.addEventListener("change", () => {
 });
 
 shuffleBtn.addEventListener("click", () => {
+
+  showPreviewBoard = false;
+
   resetTimer();
   resetMoves();
   startTimer();
